@@ -1,0 +1,50 @@
+name: AegisAudit Security Scan
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '21 8 * * 1'  # Weekly on Mondays
+
+jobs:
+  aegis-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write  # Required for uploading SARIF
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install AegisAudit
+        run: |
+          pip install .
+
+      - name: Run Aegis Scan
+        # Replace checking your own site or localhost
+        # For demo purposes, we scan example.com.
+        # In production, use your staging URLs.
+        run: |
+           aegis scan --url https://example.com --out ./scan-results --format sarif,html
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: scan-results/report.sarif
+          category: aegis-audit
+
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: aegis-report
+          path: scan-results/report.html
