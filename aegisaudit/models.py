@@ -3,12 +3,14 @@ from enum import Enum
 from typing import List, Optional, Any, Dict
 from pydantic import BaseModel, Field
 
+
 class Severity(str, Enum):
     INFO = "info"
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
+
 
 class Finding(BaseModel):
     id: str
@@ -21,8 +23,10 @@ class Finding(BaseModel):
     references: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
 
+
 class ScanArtifact(BaseModel):
     """Raw response data collected from a URL."""
+
     url: str
     final_url: str
     status_code: int
@@ -31,6 +35,7 @@ class ScanArtifact(BaseModel):
     body_snippet: str  # Truncated body for analysis
     content_type: str
     timestamp: datetime = Field(default_factory=datetime.now)
+
 
 class ScanSummary(BaseModel):
     counts_by_severity: Dict[str, int] = Field(default_factory=dict)
@@ -41,6 +46,7 @@ class ScanSummary(BaseModel):
     def total_findings(self) -> int:
         """Total number of findings across all severities."""
         return sum(self.counts_by_severity.values())
+
 
 class ScanResult(BaseModel):
     tool_name: str = "AegisAudit"

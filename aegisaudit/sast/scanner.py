@@ -1,11 +1,11 @@
 import os
 from pathlib import Path
-from typing import List
-from aegisaudit.models import Finding, ScanResult
+from aegisaudit.models import ScanResult
 from aegisaudit.sast.secrets import scan_file_for_secrets
 from aegisaudit.sast.static import scan_python_ast
 from aegisaudit.sast.dependencies import check_python_dependencies, check_node_dependencies
 from aegisaudit.scoring import calculate_score
+
 
 class SASTScanner:
     def __init__(self):
@@ -13,7 +13,7 @@ class SASTScanner:
 
     def scan(self, root_path: Path) -> ScanResult:
         all_findings = []
-        
+
         # 1. Dependency Checks (Root level primarily)
         all_findings.extend(check_python_dependencies(root_path))
         all_findings.extend(check_node_dependencies(root_path))
@@ -22,9 +22,19 @@ class SASTScanner:
         for root, _, files in os.walk(root_path):
             for file in files:
                 file_path = Path(root) / file
-                
+
                 # Skip .git, .venv, node_modules, caches
-                if any(p in file_path.parts for p in [".git", "node_modules", "venv", ".venv", "__pycache__", ".pytest_cache"]):
+                if any(
+                    p in file_path.parts
+                    for p in [
+                        ".git",
+                        "node_modules",
+                        "venv",
+                        ".venv",
+                        "__pycache__",
+                        ".pytest_cache",
+                    ]
+                ):
                     continue
 
                 # Secrets Scan (All text files)
@@ -46,8 +56,5 @@ class SASTScanner:
         summary = calculate_score(all_findings)
 
         return ScanResult(
-            targets=[str(root_path)],
-            findings=all_findings,
-            summary=summary,
-            config_snapshot={}
+            targets=[str(root_path)], findings=all_findings, summary=summary, config_snapshot={}
         )

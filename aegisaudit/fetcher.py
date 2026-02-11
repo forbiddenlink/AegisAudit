@@ -6,6 +6,7 @@ from aegisaudit.config import AegisConfig
 
 DEFAULT_USER_AGENT = "AegisAudit/0.1.0 (+https://github.com/your/aegisaudit)"
 
+
 class Fetcher:
     def __init__(self, config: AegisConfig):
         self.config = config
@@ -14,9 +15,11 @@ class Fetcher:
             follow_redirects=True,
             timeout=config.limits.timeout_sec,
             headers={"User-Agent": DEFAULT_USER_AGENT},
-            limits=httpx.Limits(max_keepalive_connections=10, max_connections=10)
+            limits=httpx.Limits(max_keepalive_connections=10, max_connections=10),
         )
-        self.semaphore = asyncio.Semaphore(int(config.limits.rate_per_sec)) # Rough rate limit approx
+        self.semaphore = asyncio.Semaphore(
+            int(config.limits.rate_per_sec)
+        )  # Rough rate limit approx
 
     async def close(self):
         await self.client.aclose()
@@ -26,13 +29,13 @@ class Fetcher:
             try:
                 # Basic rate limiting delay
                 await asyncio.sleep(1.0 / self.config.limits.rate_per_sec)
-                
+
                 response = await self.client.get(url)
-                
+
                 # Truncate body if needed
                 body_content = response.text
                 if len(body_content) > self.config.limits.max_html_bytes:
-                    body_content = body_content[:self.config.limits.max_html_bytes]
+                    body_content = body_content[: self.config.limits.max_html_bytes]
 
                 return ScanArtifact(
                     url=url,
@@ -41,7 +44,7 @@ class Fetcher:
                     headers=dict(response.headers),
                     cookies=dict(response.cookies),
                     content_type=response.headers.get("content-type", ""),
-                    body_snippet=body_content
+                    body_snippet=body_content,
                 )
             except Exception as e:
                 # In a real tool, log this failure prominently

@@ -6,6 +6,7 @@ from aegisaudit.models import ScanResult
 
 DB_PATH = Path("scan_history.db")
 
+
 class ScanHistory:
     def __init__(self, db_path: Path = DB_PATH):
         self.db_path = db_path
@@ -29,22 +30,25 @@ class ScanHistory:
                     FOREIGN KEY(scan_id) REFERENCES scans(id)
                 )
             """)
-    
+
     def add_scan(self, result: ScanResult):
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
             cur.execute(
                 "INSERT INTO scans (timestamp, tool_version, overall_score) VALUES (?, ?, ?)",
-                (result.finished_at.isoformat() if result.finished_at else datetime.now().isoformat(), 
-                 result.tool_version, 
-                 result.summary.overall_score)
+                (
+                    result.finished_at.isoformat()
+                    if result.finished_at
+                    else datetime.now().isoformat(),
+                    result.tool_version,
+                    result.summary.overall_score,
+                ),
             )
             scan_id = cur.lastrowid
-            
+
             for target in result.targets:
                 cur.execute(
-                    "INSERT INTO scan_targets (scan_id, url) VALUES (?, ?)",
-                    (scan_id, target)
+                    "INSERT INTO scan_targets (scan_id, url) VALUES (?, ?)", (scan_id, target)
                 )
             conn.commit()
 
@@ -52,24 +56,29 @@ class ScanHistory:
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cur = conn.cursor()
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT id, timestamp, overall_score 
                 FROM scans 
                 ORDER BY id DESC 
                 LIMIT ?
-            """, (limit,))
-            
+            """,
+                (limit,),
+            )
+
             rows = cur.fetchall()
             history = []
             for row in rows:
                 # Get targets
-                t_cur = conn.execute("SELECT url FROM scan_targets WHERE scan_id = ?", (row['id'],))
+                t_cur = conn.execute("SELECT url FROM scan_targets WHERE scan_id = ?", (row["id"],))
                 targets = [r[0] for r in t_cur.fetchall()]
-                
-                history.append({
-                    "id": row['id'],
-                    "timestamp": row['timestamp'],
-                    "score": row['overall_score'],
-                    "targets": targets
-                })
+
+                history.append(
+                    {
+                        "id": row["id"],
+                        "timestamp": row["timestamp"],
+                        "score": row["overall_score"],
+                        "targets": targets,
+                    }
+                )
             return history

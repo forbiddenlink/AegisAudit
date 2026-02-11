@@ -1,6 +1,7 @@
 from typing import List, Callable
-from aegisaudit.models import ScanArtifact, Finding, ScanResult, ScanSummary, Severity
+from aegisaudit.models import ScanArtifact, Finding, ScanResult
 from aegisaudit.config import AegisConfig
+from aegisaudit.scoring import calculate_score
 
 # Import checks
 from aegisaudit.checks.headers import check_headers
@@ -24,10 +25,9 @@ CHECK_MODULES: List[Callable[[ScanArtifact, AegisConfig], List[Finding]]] = [
     check_javascript,
     check_tls,
     check_secrets,
-    check_exposure
+    check_exposure,
 ]
 
-from aegisaudit.scoring import calculate_score
 
 class Runner:
     def __init__(self, config: AegisConfig):
@@ -35,7 +35,7 @@ class Runner:
 
     def run_checks(self, artifacts: List[ScanArtifact]) -> ScanResult:
         all_findings = []
-        
+
         for artifact in artifacts:
             for check_func in CHECK_MODULES:
                 findings = check_func(artifact, self.config)
@@ -48,6 +48,5 @@ class Runner:
             targets=[a.url for a in artifacts],
             findings=all_findings,
             summary=summary,
-            config_snapshot=self.config.dict()
+            config_snapshot=self.config.dict(),
         )
-
