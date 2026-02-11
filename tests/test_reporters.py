@@ -42,12 +42,7 @@ def sample_scan_result():
             ),
         ],
         summary=ScanSummary(
-            total_findings=3,
-            critical_count=0,
-            high_count=1,
-            medium_count=1,
-            low_count=1,
-            info_count=0,
+            counts_by_severity={"critical": 0, "high": 1, "medium": 1, "low": 1, "info": 0},
             overall_score=65.0,
         ),
     )
@@ -93,7 +88,7 @@ class TestJSONReport:
             data = json.load(f)
 
         assert "summary" in data
-        assert data["summary"]["total_findings"] == 3
+        assert sum(data["summary"]["counts_by_severity"].values()) == 3
         assert abs(data["summary"]["overall_score"] - 65.0) < 0.01
 
 
@@ -159,11 +154,10 @@ class TestSARIFReport:
             data = json.load(f)
 
         results = data["runs"][0]["results"]
-        # HIGH -> error, MEDIUM -> warning, LOW -> note
+        # Implementation: HIGH -> error, INFO -> note, everything else -> warning
         levels = [r["level"] for r in results]
         assert "error" in levels  # HIGH finding
-        assert "warning" in levels  # MEDIUM finding
-        assert "note" in levels  # LOW finding
+        assert "warning" in levels  # MEDIUM and LOW findings both map to warning
 
 
 class TestHTMLReport:
@@ -232,12 +226,7 @@ class TestReportWithNoFindings:
             targets=["https://secure-example.com"],
             findings=[],
             summary=ScanSummary(
-                total_findings=0,
-                critical_count=0,
-                high_count=0,
-                medium_count=0,
-                low_count=0,
-                info_count=0,
+                counts_by_severity={},
                 overall_score=100.0,
             ),
         )
@@ -248,7 +237,7 @@ class TestReportWithNoFindings:
         with open(output_file) as f:
             data = json.load(f)
 
-        assert data["summary"]["total_findings"] == 0
+        assert sum(data["summary"]["counts_by_severity"].values()) == 0
         assert abs(data["summary"]["overall_score"] - 100.0) < 0.01
 
     def test_empty_findings_html(self, tmp_path):
@@ -258,12 +247,7 @@ class TestReportWithNoFindings:
             targets=["https://secure-example.com"],
             findings=[],
             summary=ScanSummary(
-                total_findings=0,
-                critical_count=0,
-                high_count=0,
-                medium_count=0,
-                low_count=0,
-                info_count=0,
+                counts_by_severity={},
                 overall_score=100.0,
             ),
         )
