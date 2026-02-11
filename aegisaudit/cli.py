@@ -9,7 +9,7 @@ from rich.table import Table
 
 from aegisaudit.config import load_config, AegisConfig
 from aegisaudit.fetcher import Fetcher
-from aegisaudit.models import ScanResult, ScanSummary, Severity
+from aegisaudit.models import Severity
 from aegisaudit.runner import Runner
 from aegisaudit.reporters import generate_json_report, generate_sarif_report, generate_html_report
 from aegisaudit.history import ScanHistory
@@ -130,28 +130,9 @@ def audit(
     """
     console.print(f"[bold green]Starting audit of {directory}...[/bold green]")
 
-    scanner = SASTScanner(directory)
-    findings = scanner.scan()
-
-    # Calculate summary
-    counts = {s: 0 for s in Severity}
-    for f in findings:
-        counts[f.severity] += 1
-
-    summary = ScanSummary(
-        counts_by_severity=counts,
-        overall_score=100.0
-        - (counts[Severity.HIGH] * 10)
-        - (counts[Severity.MEDIUM] * 2),  # SAST Scoring logic
-    )
-
-    result = ScanResult(
-        targets=[str(directory)],
-        findings=findings,
-        summary=summary,
-        started_at=datetime.now(),
-        finished_at=datetime.now(),
-    )
+    scanner = SASTScanner()
+    result = scanner.scan(directory)
+    findings = result.findings
 
     # Display Summary
     console.print(f"\n[bold]Audit Complete found {len(findings)} issues.[/bold]")
