@@ -1,29 +1,30 @@
 import os
 from pathlib import Path
 from typing import List
-from aegisaudit.models import Finding
+from aegisaudit.models import Finding, ScanResult
 from aegisaudit.sast.secrets import scan_file_for_secrets
 from aegisaudit.sast.static import scan_python_ast
 from aegisaudit.sast.dependencies import check_python_dependencies, check_node_dependencies
+from aegisaudit.scoring import calculate_score
 
 class SASTScanner:
-    def __init__(self, root_path: Path):
-        self.root_path = root_path
+    def __init__(self):
+        pass
 
-    def scan(self) -> List[Finding]:
+    def scan(self, root_path: Path) -> ScanResult:
         all_findings = []
         
         # 1. Dependency Checks (Root level primarily)
-        all_findings.extend(check_python_dependencies(self.root_path))
-        all_findings.extend(check_node_dependencies(self.root_path))
+        all_findings.extend(check_python_dependencies(root_path))
+        all_findings.extend(check_node_dependencies(root_path))
 
         # 2. Walk files
-        for root, _, files in os.walk(self.root_path):
+        for root, _, files in os.walk(root_path):
             for file in files:
                 file_path = Path(root) / file
                 
-                # Skip .git, .env (we handle envs as findings if they exist separately?), node_modules
-                if any(p in file_path.parts for p in [".git", "node_modules", "venv", "__pycache__"]):
+                # Skip .git, .venv, node_modules, caches
+                if any(p in file_path.parts for p in [".git", "node_modules", "venv", ".venv", "__pycache__", ".pytest_cache"]):
                     continue
 
                 # Secrets Scan (All text files)
@@ -33,6 +34,20 @@ class SASTScanner:
                 if file_path.suffix == ".py":
                     all_findings.extend(scan_python_ast(file_path))
 
-        return all_findings
+        # Post-process findings to filter duplicates
+        unique = {}
+        for f in all_findings:
+            key = (f.id, f.url)
+            if key not in unique:
+                unique[key] = f
 
-```
+        all_findings = list(unique.values())
+
+        summary = calculate_score(all_findings)
+
+        return ScanResult(
+            targets=[str(root_path)],
+            findings=all_findings,
+            summary=summary,
+            config_snapshot={}
+        )
