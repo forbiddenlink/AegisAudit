@@ -37,6 +37,11 @@ class ScanSummary(BaseModel):
     category_scores: Dict[str, float] = Field(default_factory=dict)
     overall_score: float = 0.0
 
+    @property
+    def total_findings(self) -> int:
+        """Total number of findings across all severities."""
+        return sum(self.counts_by_severity.values())
+
 class ScanResult(BaseModel):
     tool_name: str = "AegisAudit"
     tool_version: str = "0.1.0"

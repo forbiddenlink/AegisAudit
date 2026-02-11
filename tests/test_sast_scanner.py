@@ -45,8 +45,8 @@ class TestSecretsDetection:
     def test_google_api_key_detection(self, scanner, temp_project):
         """Should detect Google API keys."""
         config_file = temp_project / "src" / "config.py"
-        # Test API key - not real, used for testing secret detection
-        config_file.write_text('GOOGLE_API_KEY = "AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3namBGewQe"\n')  # nosec
+        # Fake API key with valid format, used for testing secret detection
+        config_file.write_text('GOOGLE_API_KEY = "AIzaSyFAKEKEY_TEST_EXAMPLE_123456789012"\n')  # nosec
         
         results = scanner.scan(temp_project)
         google_findings = [f for f in results.findings if "google" in f.title.lower() or "api" in f.description.lower()]

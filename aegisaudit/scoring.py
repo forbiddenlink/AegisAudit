@@ -40,15 +40,16 @@ def calculate_score(findings: List[Finding]) -> ScanSummary:
         
         # Determine category from tags or fallback
         # We look for the first tag that matches a known category key
-        cat = "other"
+        cat = None
         for tag in f.tags:
             if tag in CATEGORY_WEIGHTS:
                 cat = tag
                 break
-        
-        # Deduct from that category
-        deduction = penalties[f.severity]
-        category_scores[cat] = max(0.0, category_scores[cat] - deduction)
+
+        # Deduct from that category (skip if no matching category)
+        if cat is not None:
+            deduction = penalties[f.severity]
+            category_scores[cat] = max(0.0, category_scores[cat] - deduction)
 
     # Calculate Overall Weighted Score
     total_weight = 0.0
