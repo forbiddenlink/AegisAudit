@@ -164,17 +164,22 @@ def audit(
     # Generate Reports
     out.mkdir(parents=True, exist_ok=True)
 
-    if "json" in format or "all" in format:
+    # Flatten format list (handle comma-separated values like "sarif,html")
+    formats = []
+    for f in format:
+        formats.extend(f.split(","))
+
+    if "json" in formats or "all" in formats:
         json_path = out / "report.json"
         generate_json_report(result, json_path)
         console.print(f"JSON Report: [link=file://{json_path}]{json_path}[/link]")
 
-    if "sarif" in format or "all" in format:
+    if "sarif" in formats or "all" in formats:
         sarif_path = out / "report.sarif"
         generate_sarif_report(result, sarif_path)
         console.print(f"SARIF Report: [link=file://{sarif_path}]{sarif_path}[/link]")
 
-    if "html" in format or "all" in format:
+    if "html" in formats or "all" in formats:
         html_path = out / "report.html"
         generate_html_report(result, html_path)
         console.print(f"HTML Report: [link=file://{html_path}]{html_path}[/link]")
