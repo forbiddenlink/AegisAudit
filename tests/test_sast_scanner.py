@@ -39,12 +39,12 @@ class TestSecretsDetection:
         credentials_file = temp_project / "config" / ".env"
         # AWS secret keys don't have a fixed format, but access keys do (AKIA...)
         # The current implementation only detects access key patterns
-        credentials_file.write_text(
-            "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\n"
-        )
+        credentials_file.write_text("AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\n")
 
         results = scanner.scan(temp_project)
-        aws_findings = [f for f in results.findings if "aws" in f.id.lower() or "aws" in f.title.lower()]
+        aws_findings = [
+            f for f in results.findings if "aws" in f.id.lower() or "aws" in f.title.lower()
+        ]
         assert len(aws_findings) >= 1
 
     def test_google_api_key_detection(self, scanner, temp_project):
@@ -238,9 +238,7 @@ class TestFileFiltering:
 
         results = scanner.scan(temp_project)
         # Should find AWS key secrets in src/
-        src_findings = [
-            f for f in results.findings if "src" in f.url and "aws" in f.title.lower()
-        ]
+        src_findings = [f for f in results.findings if "src" in f.url and "aws" in f.title.lower()]
         assert len(src_findings) >= 1
 
 

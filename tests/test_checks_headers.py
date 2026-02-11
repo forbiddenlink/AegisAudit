@@ -64,9 +64,7 @@ class TestCSPHeader:
 
     def test_missing_csp(self, base_artifact, base_config):
         findings = check_headers(base_artifact, base_config)
-        csp_findings = [
-            f for f in findings if "Content Security Policy" in f.title
-        ]
+        csp_findings = [f for f in findings if "Content Security Policy" in f.title]
         assert len(csp_findings) >= 1
         assert any(f.severity == Severity.MEDIUM for f in csp_findings)
 
@@ -88,7 +86,9 @@ class TestCSPHeader:
         findings = check_headers(base_artifact, base_config)
         # CSP present means no "missing CSP" finding
         missing_csp_findings = [
-            f for f in findings if "Content Security Policy" in f.title and "missing" in f.description.lower()
+            f
+            for f in findings
+            if "Content Security Policy" in f.title and "missing" in f.description.lower()
         ]
         assert len(missing_csp_findings) == 0
 
@@ -100,7 +100,9 @@ class TestCSPHeader:
         findings = check_headers(base_artifact, base_config)
         # CSP present means no "missing CSP" finding
         missing_csp_findings = [
-            f for f in findings if "Content Security Policy" in f.title and "missing" in f.description.lower()
+            f
+            for f in findings
+            if "Content Security Policy" in f.title and "missing" in f.description.lower()
         ]
         assert len(missing_csp_findings) == 0
 
