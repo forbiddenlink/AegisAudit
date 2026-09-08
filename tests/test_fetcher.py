@@ -23,7 +23,9 @@ from aegisaudit.fetcher import Fetcher
 def mock_dns(monkeypatch):
     def resolve(host, port, **_kwargs):
         assert host == "example.com"
-        return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("93.184.216.34", port))]
+        return [
+            (socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("93.184.216.34", port))
+        ]
 
     monkeypatch.setattr("aegisaudit.ssrf.socket.getaddrinfo", resolve)
 
