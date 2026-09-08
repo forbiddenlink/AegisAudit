@@ -1,5 +1,5 @@
 # Pinned by digest for reproducible builds (tag = python:3.11-slim).
-FROM python:3.11-slim@sha256:db3ff2e1800a8581e2c48a27c3995339d47bdf046da21c7627accd3d51053a93
+FROM python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
 
 WORKDIR /app
 
