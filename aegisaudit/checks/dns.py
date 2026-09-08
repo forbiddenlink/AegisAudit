@@ -19,8 +19,10 @@ def check_dns(artifact: ScanArtifact, config: AegisConfig) -> List[Finding]:
 
         # SPF Check
         has_spf = False
+        spf_lookup_complete = False
         try:
             txt_records = dns.resolver.resolve(domain, "TXT")
+            spf_lookup_complete = True
             for r in txt_records:
                 txt = r.to_text().strip('"')
                 if txt.startswith("v=spf1"):
@@ -40,10 +42,13 @@ def check_dns(artifact: ScanArtifact, config: AegisConfig) -> List[Finding]:
                             )
                         )
                     break
-        except Exception:
-            pass  # No TXT records or timeout
+        except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+            spf_lookup_complete = True
+        except Exception as exc:
+            spf_lookup_complete = False
+            logger.info("SPF lookup failed for %s: %s", domain, exc)
 
-        if not has_spf:
+        if spf_lookup_complete and not has_spf:
             findings.append(
                 Finding(
                     id="missing-spf",
